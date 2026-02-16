@@ -13,7 +13,7 @@ func _ready() -> void:
 func _setup_player(player: int) -> void:
 	var p := "p%d_" % player
 
-	var actions: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "select"]
+	var actions: Array[String] = ["move_left", "move_right", "move_up", "move_down", "jump", "select", "attack", "shield", "grab"]
 	for action in actions:
 		var full: String = p + action
 		if not InputMap.has_action(full):
@@ -27,6 +27,9 @@ func _setup_player(player: int) -> void:
 		_add_key(p + "move_down", KEY_S)
 		_add_key(p + "jump", KEY_SPACE)
 		_add_key(p + "select", KEY_SPACE)
+		_add_key(p + "attack", KEY_Q)
+		_add_key(p + "shield", KEY_E)
+		_add_key(p + "grab", KEY_R)
 	elif player == 2:
 		# Arrow keys
 		_add_key(p + "move_left", KEY_LEFT)
@@ -35,6 +38,9 @@ func _setup_player(player: int) -> void:
 		_add_key(p + "move_down", KEY_DOWN)
 		_add_key(p + "jump", KEY_ENTER)
 		_add_key(p + "select", KEY_ENTER)
+		_add_key(p + "attack", KEY_SHIFT)  # Right Shift
+		_add_key(p + "shield", KEY_CTRL)   # Right Ctrl
+		_add_key(p + "grab", KEY_KP_0)     # Numpad 0
 		# Xbox controller (device 0)
 		_add_joy_axis(p + "move_left", JOY_AXIS_LEFT_X, -1.0)
 		_add_joy_axis(p + "move_right", JOY_AXIS_LEFT_X, 1.0)
@@ -42,6 +48,9 @@ func _setup_player(player: int) -> void:
 		_add_joy_axis(p + "move_down", JOY_AXIS_LEFT_Y, 1.0)
 		_add_joy_button(p + "jump", JOY_BUTTON_A)
 		_add_joy_button(p + "select", JOY_BUTTON_A)
+		_add_joy_button(p + "attack", JOY_BUTTON_X)
+		_add_joy_button(p + "shield", JOY_BUTTON_LEFT_SHOULDER)
+		_add_joy_button(p + "grab", JOY_BUTTON_Y)
 
 
 func _add_key(action: String, keycode: Key) -> void:

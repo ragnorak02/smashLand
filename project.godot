@@ -31,6 +31,14 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[layer_names]
+
+2d_physics/layer_1="World"
+2d_physics/layer_2="P1 Hurtbox"
+2d_physics/layer_3="P2 Hurtbox"
+2d_physics/layer_4="P1 Hitbox"
+2d_physics/layer_5="P2 Hitbox"
+
 [rendering]
 
 renderer/rendering_method="gl_compatibility"

@@ -1,18 +1,28 @@
 extends Node2D
 
-## Arena manager — builds the stage, spawns fighters, sets up camera and HUD.
+## Arena manager — builds the stage, spawns fighters, sets up camera, combat HUD, and game flow.
 
 const FighterScene := preload("res://scenes/FighterBase.tscn")
 
 var fighters: Array = []
 var dynamic_camera: Camera2D
+var match_over: bool = false
+var return_timer: float = 0.0
 
 
 func _ready() -> void:
 	_build_stage()
 	_spawn_fighters()
 	_setup_camera()
-	_setup_hud()
+	_setup_combat_hud()
+	_setup_debug_hud()
+
+
+func _process(delta: float) -> void:
+	if match_over:
+		return_timer -= delta
+		if return_timer <= 0.0:
+			GameManager.change_scene("res://scenes/CharacterSelect.tscn")
 
 
 # --- Stage Construction ---
@@ -70,9 +80,12 @@ func _spawn_fighters() -> void:
 		var fighter = FighterScene.instantiate()
 		fighter.set("player_id", i + 1)
 		fighter.set("fighter_type", characters[i])
+		fighter.set("stocks", GameManager.stock_count)
 		fighter.position = spawns[i]
 		add_child(fighter)
 		fighters.append(fighter)
+		# Connect death signal
+		fighter.fighter_died.connect(_on_fighter_died)
 
 
 # --- Camera ---
@@ -87,12 +100,28 @@ func _setup_camera() -> void:
 	add_child(dynamic_camera)
 
 
+# --- Combat HUD ---
+
+func _setup_combat_hud() -> void:
+	var hud_script := load("res://scripts/combat_hud.gd")
+	var canvas := CanvasLayer.new()
+	canvas.name = "CombatHUDLayer"
+
+	var hud := Control.new()
+	hud.set_script(hud_script)
+	hud.name = "CombatHUD"
+	hud.set("fighters", fighters)
+
+	canvas.add_child(hud)
+	add_child(canvas)
+
+
 # --- Debug HUD ---
 
-func _setup_hud() -> void:
+func _setup_debug_hud() -> void:
 	var hud_script := load("res://scripts/input_debug_hud.gd")
 	var canvas := CanvasLayer.new()
-	canvas.name = "HUDLayer"
+	canvas.name = "DebugHUDLayer"
 
 	var hud = Control.new()
 	hud.set_script(hud_script)
@@ -100,4 +129,52 @@ func _setup_hud() -> void:
 	hud.set("fighters", fighters)
 
 	canvas.add_child(hud)
+	add_child(canvas)
+
+
+# --- Match Flow ---
+
+func _on_fighter_died(player_id: int) -> void:
+	if match_over:
+		return
+
+	# The winner is the other player
+	var winner := 2 if player_id == 1 else 1
+	GameManager.last_winner = winner
+	match_over = true
+	return_timer = 3.5
+
+	# Show winner overlay
+	_show_winner(winner)
+
+
+func _show_winner(winner: int) -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "WinnerOverlay"
+	canvas.layer = 10
+
+	var overlay := ColorRect.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.color = Color(0, 0, 0, 0.6)
+	canvas.add_child(overlay)
+
+	var label := Label.new()
+	label.text = "PLAYER %d WINS!" % winner
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	label.add_theme_font_size_override("font_size", 64)
+	var win_color := Color(0.4, 0.7, 1.0) if winner == 1 else Color(1.0, 0.5, 0.4)
+	label.add_theme_color_override("font_color", win_color)
+	canvas.add_child(label)
+
+	var sub := Label.new()
+	sub.text = "Returning to character select..."
+	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sub.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	sub.offset_top = -80
+	sub.add_theme_font_size_override("font_size", 20)
+	sub.add_theme_color_override("font_color", Color(0.6, 0.6, 0.7))
+	canvas.add_child(sub)
+
 	add_child(canvas)
