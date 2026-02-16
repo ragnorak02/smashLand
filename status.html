@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmashLand — Project Status</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 2rem;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+  .subtitle { color: var(--muted); margin-bottom: 2rem; font-size: 0.9rem; }
+  h2 {
+    font-size: 1.1rem;
+    color: var(--blue);
+    margin: 1.5rem 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .phase-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+  }
+  .phase-card.active { border-color: var(--green); }
+  .phase-card .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .phase-card .name { font-size: 1rem; font-weight: 600; margin: 0.25rem 0; }
+  .phase-card .status { font-size: 0.8rem; font-weight: 600; }
+  .status-done { color: var(--green); }
+  .status-current { color: var(--yellow); }
+  .status-future { color: var(--muted); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; }
+  .chip {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .chip-done { background: #23392e; color: var(--green); }
+  .chip-wip { background: #3d2e00; color: var(--yellow); }
+  .chip-todo { background: #1c1c1c; color: var(--muted); }
+  .chip-na { background: #1c1c1c; color: var(--muted); }
+
+  .stats-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    flex: 1;
+    min-width: 120px;
+  }
+  .stat-box .num { font-size: 1.5rem; font-weight: 700; }
+  .stat-box .lbl { font-size: 0.75rem; color: var(--muted); }
+
+  .file-list { list-style: none; }
+  .file-list li {
+    padding: 0.35rem 0;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .file-list .path { color: var(--blue); }
+
+  footer {
+    margin-top: 2.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<h1>SmashLand</h1>
+<p class="subtitle">2D Platform Fighter &mdash; Godot 4.6 &bull; GDScript &bull; GL Compatibility</p>
+
+<!-- Phase Overview -->
+<h2>Development Phases</h2>
+<div class="phase-grid">
+  <div class="phase-card active">
+    <div class="label">Phase 1</div>
+    <div class="name">Foundation</div>
+    <div class="status status-current">&#9679; Active</div>
+  </div>
+  <div class="phase-card">
+    <div class="label">Phase 2</div>
+    <div class="name">Combat</div>
+    <div class="status status-future">&#9675; Planned</div>
+  </div>
+  <div class="phase-card">
+    <div class="label">Phase 3</div>
+    <div class="name">Game Flow</div>
+    <div class="status status-future">&#9675; Planned</div>
+  </div>
+  <div class="phase-card">
+    <div class="label">Phase 4</div>
+    <div class="name">Content</div>
+    <div class="status status-future">&#9675; Planned</div>
+  </div>
+  <div class="phase-card">
+    <div class="label">Phase 5</div>
+    <div class="name">Polish</div>
+    <div class="status status-future">&#9675; Planned</div>
+  </div>
+</div>
+
+<!-- Quick Stats -->
+<h2>Quick Stats</h2>
+<div class="stats-row">
+  <div class="stat-box">
+    <div class="num" style="color:var(--blue)">8</div>
+    <div class="lbl">GDScript files</div>
+  </div>
+  <div class="stat-box">
+    <div class="num" style="color:var(--purple)">4</div>
+    <div class="lbl">Scenes (.tscn)</div>
+  </div>
+  <div class="stat-box">
+    <div class="num" style="color:var(--green)">2</div>
+    <div class="lbl">Fighter types</div>
+  </div>
+  <div class="stat-box">
+    <div class="num" style="color:var(--yellow)">0</div>
+    <div class="lbl">Art/audio assets</div>
+  </div>
+  <div class="stat-box">
+    <div class="num" style="color:var(--red)">0</div>
+    <div class="lbl">TODO/FIXME</div>
+  </div>
+</div>
+
+<!-- Systems Status -->
+<h2>Systems Status</h2>
+<table>
+  <thead>
+    <tr><th>System</th><th>File</th><th>Status</th><th>Notes</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Input Setup</td><td>input_setup.gd</td><td><span class="chip chip-done">Done</span></td><td>P1 keyboard, P2 keyboard + controller</td></tr>
+    <tr><td>Scene Manager</td><td>game_manager.gd</td><td><span class="chip chip-done">Done</span></td><td>Minimal — stores selections, changes scenes</td></tr>
+    <tr><td>Character Select</td><td>character_select.gd</td><td><span class="chip chip-done">Done</span></td><td>2 fighters, ready/unready, transition</td></tr>
+    <tr><td>Fighter Movement</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>Accel/friction, multi-jump, fast fall</td></tr>
+    <tr><td>Dynamic Camera</td><td>dynamic_camera.gd</td><td><span class="chip chip-done">Done</span></td><td>Smooth tracking, zoom interpolation</td></tr>
+    <tr><td>Arena/Stage</td><td>arena.gd</td><td><span class="chip chip-done">Done</span></td><td>1 stage with 3 platforms</td></tr>
+    <tr><td>Debug HUD</td><td>input_debug_hud.gd</td><td><span class="chip chip-done">Done</span></td><td>Real-time input state overlay</td></tr>
+    <tr><td>Combat</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>No attacks, damage, or knockback</td></tr>
+    <tr><td>Stocks/Win</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>No lives, percentage, or win condition</td></tr>
+    <tr><td>Main Menu</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>Main.tscn redirects to CharacterSelect</td></tr>
+    <tr><td>Audio</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>No sound effects or music</td></tr>
+    <tr><td>Art Assets</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>All visuals are ColorRects</td></tr>
+    <tr><td>Tests</td><td>&mdash;</td><td><span class="chip chip-na">None</span></td><td>No test framework integrated</td></tr>
+  </tbody>
+</table>
+
+<!-- Fighter Roster -->
+<h2>Fighter Roster</h2>
+<table>
+  <thead>
+    <tr><th>Name</th><th>ID</th><th>Color</th><th>Size</th><th>Speed</th><th>Jumps</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Brawler</td><td>0</td><td style="color:#3366ee">&#9632; Blue</td><td>44&times;68</td><td>380</td><td>3</td></tr>
+    <tr><td>Speedster</td><td>1</td><td style="color:#ee3333">&#9632; Red</td><td>36&times;60</td><td>500</td><td>4</td></tr>
+  </tbody>
+</table>
+
+<!-- File Map -->
+<h2>File Map</h2>
+<ul class="file-list">
+  <li><span class="path">project.godot</span> &mdash; Engine config, autoloads, display settings</li>
+  <li><span class="path">scenes/Main.tscn</span> &mdash; Entry point scene</li>
+  <li><span class="path">scenes/CharacterSelect.tscn</span> &mdash; Fighter selection screen</li>
+  <li><span class="path">scenes/Arena.tscn</span> &mdash; Gameplay arena</li>
+  <li><span class="path">scenes/FighterBase.tscn</span> &mdash; Fighter prefab (CharacterBody2D)</li>
+  <li><span class="path">scripts/main.gd</span> &mdash; Redirects to CharacterSelect</li>
+  <li><span class="path">scripts/character_select.gd</span> &mdash; Selection UI logic</li>
+  <li><span class="path">scripts/arena.gd</span> &mdash; Stage build + fighter spawn</li>
+  <li><span class="path">scripts/fighter_base.gd</span> &mdash; Fighter controller</li>
+  <li><span class="path">scripts/dynamic_camera.gd</span> &mdash; Camera tracking</li>
+  <li><span class="path">scripts/input_debug_hud.gd</span> &mdash; Debug overlay</li>
+  <li><span class="path">scripts/autoload/input_setup.gd</span> &mdash; Input registration</li>
+  <li><span class="path">scripts/autoload/game_manager.gd</span> &mdash; Game state manager</li>
+</ul>
+
+<footer>
+  Auto-generated project dashboard &bull; Open this file in a browser to view
+</footer>
+
+</body>
+</html>
