@@ -124,15 +124,15 @@
 <!-- Phase Overview -->
 <h2>Development Phases</h2>
 <div class="phase-grid">
-  <div class="phase-card active">
+  <div class="phase-card">
     <div class="label">Phase 1</div>
     <div class="name">Foundation</div>
-    <div class="status status-current">&#9679; Active</div>
+    <div class="status status-done">&#9679; Complete</div>
   </div>
   <div class="phase-card">
     <div class="label">Phase 2</div>
     <div class="name">Combat</div>
-    <div class="status status-future">&#9675; Planned</div>
+    <div class="status status-done">&#9679; Complete</div>
   </div>
   <div class="phase-card">
     <div class="label">Phase 3</div>
@@ -155,7 +155,7 @@
 <h2>Quick Stats</h2>
 <div class="stats-row">
   <div class="stat-box">
-    <div class="num" style="color:var(--blue)">8</div>
+    <div class="num" style="color:var(--blue)">12</div>
     <div class="lbl">GDScript files</div>
   </div>
   <div class="stat-box">
@@ -183,19 +183,25 @@
     <tr><th>System</th><th>File</th><th>Status</th><th>Notes</th></tr>
   </thead>
   <tbody>
-    <tr><td>Input Setup</td><td>input_setup.gd</td><td><span class="chip chip-done">Done</span></td><td>P1 keyboard, P2 keyboard + controller</td></tr>
-    <tr><td>Scene Manager</td><td>game_manager.gd</td><td><span class="chip chip-done">Done</span></td><td>Minimal — stores selections, changes scenes</td></tr>
+    <tr><td>Input Setup</td><td>input_setup.gd</td><td><span class="chip chip-done">Done</span></td><td>P1 keyboard (WASD+Space+Q/E/R), P2 keyboard + controller</td></tr>
+    <tr><td>Scene Manager</td><td>game_manager.gd</td><td><span class="chip chip-done">Done</span></td><td>Selections, stock count, last winner, scene changes</td></tr>
     <tr><td>Character Select</td><td>character_select.gd</td><td><span class="chip chip-done">Done</span></td><td>2 fighters, ready/unready, transition</td></tr>
-    <tr><td>Fighter Movement</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>Accel/friction, multi-jump, fast fall</td></tr>
+    <tr><td>Fighter State Machine</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>11 states: movement, attack, hitstun, shield, grab</td></tr>
+    <tr><td>Attack System</td><td>attack_data.gd, hitbox.gd</td><td><span class="chip chip-done">Done</span></td><td>7 attacks per fighter, startup/active/recovery, dynamic hitboxes</td></tr>
+    <tr><td>Damage &amp; Knockback</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>% scaling knockback, hitlag freeze, hitstun, KOs at 120&ndash;150%</td></tr>
+    <tr><td>Shield</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>Block, drain, regen, shield break with dizzy stun</td></tr>
+    <tr><td>Grab</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>Grab beats shield, pummel, 4 throws, mash-out</td></tr>
+    <tr><td>Combat HUD</td><td>combat_hud.gd</td><td><span class="chip chip-done">Done</span></td><td>Damage % (color-coded) + stock icons</td></tr>
+    <tr><td>Stocks &amp; Match Flow</td><td>arena.gd</td><td><span class="chip chip-done">Done</span></td><td>3 stocks, winner overlay, return to character select</td></tr>
     <tr><td>Dynamic Camera</td><td>dynamic_camera.gd</td><td><span class="chip chip-done">Done</span></td><td>Smooth tracking, zoom interpolation</td></tr>
     <tr><td>Arena/Stage</td><td>arena.gd</td><td><span class="chip chip-done">Done</span></td><td>1 stage with 3 platforms</td></tr>
-    <tr><td>Debug HUD</td><td>input_debug_hud.gd</td><td><span class="chip chip-done">Done</span></td><td>Real-time input state overlay</td></tr>
-    <tr><td>Combat</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>No attacks, damage, or knockback</td></tr>
-    <tr><td>Stocks/Win</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>No lives, percentage, or win condition</td></tr>
+    <tr><td>Debug HUD</td><td>input_debug_hud.gd</td><td><span class="chip chip-done">Done</span></td><td>State, damage %, shield health, input overlay</td></tr>
+    <tr><td>Visual Effects</td><td>fighter_base.gd</td><td><span class="chip chip-done">Done</span></td><td>Hit flash, hitbox overlay, shield bubble, break stars, KB trail</td></tr>
     <tr><td>Main Menu</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>Main.tscn redirects to CharacterSelect</td></tr>
     <tr><td>Audio</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>No sound effects or music</td></tr>
-    <tr><td>Art Assets</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>All visuals are ColorRects</td></tr>
-    <tr><td>Tests</td><td>&mdash;</td><td><span class="chip chip-na">None</span></td><td>No test framework integrated</td></tr>
+    <tr><td>Art Assets</td><td>&mdash;</td><td><span class="chip chip-todo">Not started</span></td><td>All visuals are ColorRects + _draw()</td></tr>
+    <tr><td>Tests</td><td>tests/run-tests.gd</td><td><span class="chip chip-done">Done</span></td><td>32 headless tests: scenes, scripts, attacks, knockback, config, perf</td></tr>
+    <tr><td>Studio OS Integration</td><td>game.config.json</td><td><span class="chip chip-done">Done</span></td><td>Launcher metadata, test command, CI wrappers (.sh/.bat)</td></tr>
   </tbody>
 </table>
 
@@ -211,6 +217,23 @@
   </tbody>
 </table>
 
+<h2>Combat Data</h2>
+<table>
+  <thead>
+    <tr><th>Attribute</th><th>Brawler</th><th>Speedster</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Weight</td><td>100</td><td>80</td></tr>
+    <tr><td>Ground Neutral Dmg</td><td>10</td><td>7</td></tr>
+    <tr><td>Ground Forward Dmg</td><td>14</td><td>10</td></tr>
+    <tr><td>Air Back Dmg (strongest)</td><td>16</td><td>12</td></tr>
+    <tr><td>Startup (fastest)</td><td>0.06s</td><td>0.04s</td></tr>
+    <tr><td>Shield Break</td><td colspan="2">3s dizzy stun at 0 shield HP</td></tr>
+    <tr><td>Grab Hold</td><td colspan="2">0.4&ndash;2.0s, scales with victim %</td></tr>
+    <tr><td>Stocks</td><td colspan="2">3 per fighter</td></tr>
+  </tbody>
+</table>
+
 <!-- File Map -->
 <h2>File Map</h2>
 <ul class="file-list">
@@ -221,12 +244,19 @@
   <li><span class="path">scenes/FighterBase.tscn</span> &mdash; Fighter prefab (CharacterBody2D)</li>
   <li><span class="path">scripts/main.gd</span> &mdash; Redirects to CharacterSelect</li>
   <li><span class="path">scripts/character_select.gd</span> &mdash; Selection UI logic</li>
-  <li><span class="path">scripts/arena.gd</span> &mdash; Stage build + fighter spawn</li>
-  <li><span class="path">scripts/fighter_base.gd</span> &mdash; Fighter controller</li>
+  <li><span class="path">scripts/arena.gd</span> &mdash; Stage build, fighter spawn, combat HUD, match flow</li>
+  <li><span class="path">scripts/fighter_base.gd</span> &mdash; 11-state fighter controller with full combat</li>
+  <li><span class="path">scripts/combat/attack_data.gd</span> &mdash; Static attack dictionaries (AttackData class)</li>
+  <li><span class="path">scripts/combat/hitbox.gd</span> &mdash; Dynamic hitbox Area2D script</li>
+  <li><span class="path">scripts/combat_hud.gd</span> &mdash; Damage % + stock icons HUD</li>
   <li><span class="path">scripts/dynamic_camera.gd</span> &mdash; Camera tracking</li>
-  <li><span class="path">scripts/input_debug_hud.gd</span> &mdash; Debug overlay</li>
-  <li><span class="path">scripts/autoload/input_setup.gd</span> &mdash; Input registration</li>
+  <li><span class="path">scripts/input_debug_hud.gd</span> &mdash; Debug overlay (input + combat state)</li>
+  <li><span class="path">scripts/autoload/input_setup.gd</span> &mdash; Input registration (movement + combat)</li>
   <li><span class="path">scripts/autoload/game_manager.gd</span> &mdash; Game state manager</li>
+  <li><span class="path">tests/run-tests.gd</span> &mdash; Automated test runner (32 tests, 9 suites)</li>
+  <li><span class="path">tests/run-tests.bat</span> &mdash; Windows CI wrapper</li>
+  <li><span class="path">tests/run-tests.sh</span> &mdash; Unix CI wrapper</li>
+  <li><span class="path">game.config.json</span> &mdash; Studio OS launcher metadata</li>
 </ul>
 
 <footer>
