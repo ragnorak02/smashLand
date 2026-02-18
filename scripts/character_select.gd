@@ -43,17 +43,23 @@ func _process(delta: float) -> void:
 		GameManager.change_scene("res://scenes/Main.tscn")
 		return
 
-	# P1 input
+	# P1 input (in training mode, also accept controller/P2 inputs for P1)
+	var p1_nav := Input.is_action_just_pressed("p1_move_up") or Input.is_action_just_pressed("p1_move_down")
+	var p1_confirm := Input.is_action_just_pressed("p1_select")
+	if GameManager.training_mode:
+		p1_nav = p1_nav or Input.is_action_just_pressed("p2_move_up") or Input.is_action_just_pressed("p2_move_down")
+		p1_confirm = p1_confirm or Input.is_action_just_pressed("p2_select")
+
 	if not p1_ready:
-		if Input.is_action_just_pressed("p1_move_up") or Input.is_action_just_pressed("p1_move_down"):
+		if p1_nav:
 			p1_selection = 1 - p1_selection
 			_update_display()
-		if Input.is_action_just_pressed("p1_select"):
+		if p1_confirm:
 			p1_ready = true
 			_update_display()
 	else:
 		# Allow un-ready with movement
-		if Input.is_action_just_pressed("p1_move_up") or Input.is_action_just_pressed("p1_move_down"):
+		if p1_nav:
 			p1_ready = false
 			p1_selection = 1 - p1_selection
 			_update_display()
@@ -138,7 +144,7 @@ func _build_ui() -> void:
 	# Instructions
 	var instr := Label.new()
 	if GameManager.training_mode:
-		instr.text = "P1: W/S + SPACE  |  E to go back"
+		instr.text = "W/S + SPACE  |  Controller  |  E to go back"
 	else:
 		instr.text = "P1: W/S + SPACE   |   P2: Arrows + ENTER  /  Controller   |   E to go back"
 	instr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

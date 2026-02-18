@@ -9,16 +9,21 @@ var fighters: Array = []
 var dynamic_camera: Camera2D
 var match_over: bool = false
 var return_timer: float = 0.0
+var platform_data: Array[Dictionary] = []
 
 
 func _ready() -> void:
 	_build_stage()
+	# Wait two physics frames so the physics server fully registers platform collision shapes
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 	_spawn_fighters()
 	_setup_camera()
 	_setup_combat_hud()
-	_setup_debug_hud()
+	_setup_minimap()
 	if GameManager.training_mode:
 		_setup_training_overlay()
+	print("[Arena] Init complete on frame %d — %d fighters spawned" % [Engine.get_physics_frames(), fighters.size()])
 
 
 func _process(delta: float) -> void:
@@ -53,6 +58,7 @@ func _build_stage() -> void:
 
 
 func _add_platform(pos: Vector2, size: Vector2, color: Color) -> void:
+	platform_data.append({"pos": pos, "size": size})
 	var body := StaticBody2D.new()
 	body.position = pos
 
@@ -88,12 +94,13 @@ func _spawn_fighters() -> void:
 		fighter.set("player_id", 1)
 		fighter.set("fighter_type", GameManager.player1_character)
 		fighter.set("stocks", GameManager.stock_count)
-		fighter.position = Vector2(0, -100)
+		fighter.position = Vector2(0, -30)
 		add_child(fighter)
 		fighters.append(fighter)
+		print("[Arena] Training fighter spawned at %s on frame %d" % [fighter.position, Engine.get_physics_frames()])
 	else:
 		# Normal 2P match
-		var spawns: Array[Vector2] = [Vector2(-200, -100), Vector2(200, -100)]
+		var spawns: Array[Vector2] = [Vector2(-200, -30), Vector2(200, -30)]
 		var characters: Array[int] = [GameManager.player1_character, GameManager.player2_character]
 
 		for i in range(2):
@@ -105,6 +112,7 @@ func _spawn_fighters() -> void:
 			add_child(fighter)
 			fighters.append(fighter)
 			fighter.fighter_died.connect(_on_fighter_died)
+			print("[Arena] P%d spawned at %s on frame %d" % [i + 1, fighter.position, Engine.get_physics_frames()])
 
 
 # --- Camera ---
@@ -136,19 +144,20 @@ func _setup_combat_hud() -> void:
 	add_child(canvas)
 
 
-# --- Debug HUD ---
+# --- Minimap ---
 
-func _setup_debug_hud() -> void:
-	var hud_script := load("res://scripts/input_debug_hud.gd")
+func _setup_minimap() -> void:
+	var minimap_script := load("res://scripts/minimap.gd")
 	var canvas := CanvasLayer.new()
-	canvas.name = "DebugHUDLayer"
+	canvas.name = "MinimapLayer"
 
-	var hud = Control.new()
-	hud.set_script(hud_script)
-	hud.name = "InputDebugHUD"
-	hud.set("fighters", fighters)
+	var minimap = Control.new()
+	minimap.set_script(minimap_script)
+	minimap.name = "Minimap"
+	minimap.set("fighters", fighters)
+	minimap.set("platform_data", platform_data)
 
-	canvas.add_child(hud)
+	canvas.add_child(minimap)
 	add_child(canvas)
 
 

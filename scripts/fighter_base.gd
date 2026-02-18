@@ -87,6 +87,10 @@ const INVULN_DURATION: float = 2.0
 var hit_flash_timer: float = 0.0
 var knockback_trail_timer: float = 0.0
 
+# Spawn safety
+var _spawn_grace_frames: int = 5
+var _debug_frame_count: int = 0
+
 # Boundaries
 const KILL_ZONE_Y: float = 700.0
 const KILL_ZONE_X: float = 1200.0
@@ -115,6 +119,7 @@ func _ready() -> void:
 	# Disable fighter-to-fighter push (keep world collision on layer 1)
 	collision_layer = 1
 	collision_mask = 1
+	print("[Fighter P%d] _ready() pos=%s type=%d on frame %d" % [player_id, position, fighter_type, Engine.get_physics_frames()])
 
 
 func _apply_fighter_stats() -> void:
@@ -316,6 +321,16 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Spawn grace period — decrement after move_and_slide
+	if _spawn_grace_frames > 0:
+		_spawn_grace_frames -= 1
+
+	# Diagnostic logging for first 10 frames
+	_debug_frame_count += 1
+	if _debug_frame_count <= 10:
+		print("[Fighter P%d] frame=%d pos=%s vel=%s on_floor=%s grace=%d" % [
+			player_id, _debug_frame_count, position, velocity, on_floor, _spawn_grace_frames])
+
 	# Jump counter display
 	if jump_label:
 		if not on_floor and jumps_remaining < max_jumps:
@@ -323,8 +338,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			jump_label.text = ""
 
-	# Kill zone
-	if position.y > KILL_ZONE_Y or absf(position.x) > KILL_ZONE_X:
+	# Kill zone (skip during spawn grace period)
+	if _spawn_grace_frames <= 0 and (position.y > KILL_ZONE_Y or absf(position.x) > KILL_ZONE_X):
 		_die()
 
 	# Invulnerability blink
@@ -876,6 +891,7 @@ func _shield_hit(atk: Dictionary, attacker: CharacterBody2D) -> void:
 # --- Death / Respawn ---
 
 func _die() -> void:
+	print("[Fighter P%d] _die() at pos=%s frame=%d" % [player_id, position, _debug_frame_count])
 	if GameManager.training_mode:
 		_respawn()
 		return
@@ -897,6 +913,7 @@ func _die() -> void:
 
 
 func _respawn() -> void:
+	print("[Fighter P%d] _respawn() to %s on frame %d" % [player_id, spawn_position, _debug_frame_count])
 	position = spawn_position
 	velocity = Vector2.ZERO
 	damage_percent = 0.0
@@ -905,6 +922,7 @@ func _respawn() -> void:
 	is_fast_falling = false
 	state = State.IDLE
 	_despawn_hitbox()
+	_spawn_grace_frames = 5
 
 	# Invulnerability
 	invulnerable = true
