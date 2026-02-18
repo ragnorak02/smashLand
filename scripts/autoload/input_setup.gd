@@ -51,6 +51,11 @@ func _setup_player(player: int) -> void:
 		_add_joy_button(p + "attack", JOY_BUTTON_X)
 		_add_joy_button(p + "shield", JOY_BUTTON_LEFT_SHOULDER)
 		_add_joy_button(p + "grab", JOY_BUTTON_Y)
+		# Xbox D-pad
+		_add_joy_button(p + "move_up", JOY_BUTTON_DPAD_UP)
+		_add_joy_button(p + "move_down", JOY_BUTTON_DPAD_DOWN)
+		_add_joy_button(p + "move_left", JOY_BUTTON_DPAD_LEFT)
+		_add_joy_button(p + "move_right", JOY_BUTTON_DPAD_RIGHT)
 
 
 func _add_key(action: String, keycode: Key) -> void:

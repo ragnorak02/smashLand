@@ -876,6 +876,10 @@ func _shield_hit(atk: Dictionary, attacker: CharacterBody2D) -> void:
 # --- Death / Respawn ---
 
 func _die() -> void:
+	if GameManager.training_mode:
+		_respawn()
+		return
+
 	stocks -= 1
 	emit_signal("stock_changed", player_id, stocks)
 
