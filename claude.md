@@ -17,10 +17,10 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 1. `InputSetup` — `scripts/autoload/input_setup.gd` — registers all input actions at startup
 2. `GameManager` — `scripts/autoload/game_manager.gd` — stores selections, handles scene changes
 
-### Core Scripts
+### Core Scripts (11 GDScript + 2 test scripts)
 | File | Purpose |
 |------|---------|
-| `scripts/fighter_base.gd` | State machine, movement, combat, shield, grab, visuals, signals |
+| `scripts/fighter_base.gd` | 11-state machine, movement, combat, shield, grab, visuals, signals |
 | `scripts/arena.gd` | Stage construction, fighter spawning, camera/HUD setup, match flow |
 | `scripts/dynamic_camera.gd` | Tracks fighters, smooth zoom interpolation |
 | `scripts/character_select.gd` | Two-player fighter selection UI |
@@ -29,6 +29,7 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 | `scripts/combat_hud.gd` | Damage percentage + stock icons display (CanvasLayer) |
 | `scripts/input_debug_hud.gd` | Real-time input/combat state overlay |
 | `scripts/main.gd` | Entry point — immediately loads CharacterSelect |
+| `tests/run-tests.gd` | Headless test runner (32 tests, 9 suites) |
 
 ### Fighter Types
 | Type | ID | Color | Size | Speed | Jumps | Notes |
@@ -47,19 +48,19 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 - Knockback formula: `(base_kb + (percent * kb_scaling / 10)) * (200 / (weight + 100))`
 - Stocks: 3 per fighter, match ends when one reaches 0
 
-## Current Repo State (Auto-Detected)
+## Current Repo State
 
-- Phase 1 (Foundation) complete: movement, camera, character select, arena flow
-- Phase 2 (Combat) complete: attacks, damage/knockback, hitstun/hitlag, shield, grab, stocks, combat HUD, match flow
-- No test framework or test files present
+- **Phase 1 (Foundation)** — complete: movement, camera, character select, arena flow
+- **Phase 2 (Combat)** — complete: 7 attacks per fighter, damage/knockback, hitstun/hitlag, shield (drain/regen/break), grab (pummel + 4 throws + mash-out), combat HUD
+- **Phase 3 (Game Flow)** — partially complete: stocks (3 per fighter), win condition with winner overlay → return to character select, invulnerability on respawn. **Not started:** match timer, results screen, main menu, pause menu
+- **Test suite**: 32 headless tests across 9 suites (`tests/run-tests.gd`), CI wrappers (`run-tests.bat`, `run-tests.sh`)
+- **Studio OS integration**: `game.config.json` with launcher metadata, test command, build v0.2.1
 - No art/audio assets — all visuals are ColorRect-based programmer art + `_draw()` overlays
 - No fonts, themes, or .tres resource files
 - Only 2 fighter types exist (Brawler, Speedster) — selected via integer toggle
 - GameManager stores selections, stock count, and last winner
 - Full attack/shield/grab triangle implemented (attack beats grab, shield beats attack, grab beats shield)
-- Stock-based win condition with winner overlay → return to character select
-- No main menu — Main.tscn immediately redirects to CharacterSelect
-- No settings, pause menu, or audio
+- 4 scenes: Main.tscn, CharacterSelect.tscn, Arena.tscn, FighterBase.tscn
 
 ## Git Workflow
 See [git_workflow.md](git_workflow.md) for checkpoint commit process and safety rules.

@@ -5,8 +5,8 @@ A local-multiplayer 2D platform fighter inspired by Super Smash Bros., built in 
 
 ## Development Phases
 
-### Phase 1 — Foundation (CURRENT)
-**Status: Core complete**
+### Phase 1 — Foundation
+**Status: Complete**
 - [x] Project structure and autoloads
 - [x] Input system (keyboard P1/P2 + controller P2)
 - [x] Character select screen (2 fighters)
@@ -19,17 +19,21 @@ A local-multiplayer 2D platform fighter inspired by Super Smash Bros., built in 
 - [x] Arena with main platform + 2 floating platforms
 
 ### Phase 2 — Combat
-- [ ] Basic attack system (normal attacks)
-- [ ] Damage/percentage tracking
-- [ ] Knockback physics
-- [ ] Hitstun/hitlag
-- [ ] Shield/block mechanic
-- [ ] Grab system
+**Status: Complete**
+- [x] Basic attack system (7 attacks per fighter: ground neutral/forward, air neutral/forward/back/up/down)
+- [x] Damage/percentage tracking (color-coded HUD)
+- [x] Knockback physics (scaling formula with weight)
+- [x] Hitstun/hitlag (freeze frames + hitstun duration)
+- [x] Shield/block mechanic (drain, regen, shield break with 3s dizzy stun)
+- [x] Grab system (grab, pummel, 4 directional throws, mash-out escape)
 
-### Phase 3 — Game Flow
-- [ ] Stock/lives system
+### Phase 3 — Game Flow (CURRENT)
+**Status: Partially complete**
+- [x] Stock/lives system (3 stocks per fighter)
+- [x] Win/lose conditions (winner overlay → return to character select)
+- [x] Combat HUD (damage % + stock icons)
+- [x] Invulnerability on respawn (2s with blink)
 - [ ] Match timer
-- [ ] Win/lose conditions
 - [ ] Results screen
 - [ ] Main menu
 - [ ] Pause menu
