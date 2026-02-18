@@ -1,6 +1,7 @@
 extends Node2D
 
 ## Arena manager — builds the stage, spawns fighters, sets up camera, combat HUD, and game flow.
+## Supports training mode (single fighter, no match end, E+R to exit).
 
 const FighterScene := preload("res://scenes/FighterBase.tscn")
 
@@ -16,13 +17,21 @@ func _ready() -> void:
 	_setup_camera()
 	_setup_combat_hud()
 	_setup_debug_hud()
+	if GameManager.training_mode:
+		_setup_training_overlay()
 
 
 func _process(delta: float) -> void:
+	# Training mode exit: E+R combo
+	if GameManager.training_mode:
+		if Input.is_action_pressed("p1_shield") and Input.is_action_pressed("p1_grab"):
+			GameManager.change_scene("res://scenes/Main.tscn")
+			return
+
 	if match_over:
 		return_timer -= delta
 		if return_timer <= 0.0:
-			GameManager.change_scene("res://scenes/CharacterSelect.tscn")
+			GameManager.change_scene("res://scenes/Main.tscn")
 
 
 # --- Stage Construction ---
@@ -73,19 +82,29 @@ func _add_platform(pos: Vector2, size: Vector2, color: Color) -> void:
 # --- Fighter Spawning ---
 
 func _spawn_fighters() -> void:
-	var spawns: Array[Vector2] = [Vector2(-200, -100), Vector2(200, -100)]
-	var characters: Array[int] = [GameManager.player1_character, GameManager.player2_character]
-
-	for i in range(2):
+	if GameManager.training_mode:
+		# Training mode: spawn only P1
 		var fighter = FighterScene.instantiate()
-		fighter.set("player_id", i + 1)
-		fighter.set("fighter_type", characters[i])
+		fighter.set("player_id", 1)
+		fighter.set("fighter_type", GameManager.player1_character)
 		fighter.set("stocks", GameManager.stock_count)
-		fighter.position = spawns[i]
+		fighter.position = Vector2(0, -100)
 		add_child(fighter)
 		fighters.append(fighter)
-		# Connect death signal
-		fighter.fighter_died.connect(_on_fighter_died)
+	else:
+		# Normal 2P match
+		var spawns: Array[Vector2] = [Vector2(-200, -100), Vector2(200, -100)]
+		var characters: Array[int] = [GameManager.player1_character, GameManager.player2_character]
+
+		for i in range(2):
+			var fighter = FighterScene.instantiate()
+			fighter.set("player_id", i + 1)
+			fighter.set("fighter_type", characters[i])
+			fighter.set("stocks", GameManager.stock_count)
+			fighter.position = spawns[i]
+			add_child(fighter)
+			fighters.append(fighter)
+			fighter.fighter_died.connect(_on_fighter_died)
 
 
 # --- Camera ---
@@ -111,6 +130,7 @@ func _setup_combat_hud() -> void:
 	hud.set_script(hud_script)
 	hud.name = "CombatHUD"
 	hud.set("fighters", fighters)
+	hud.set("hide_p2", GameManager.training_mode)
 
 	canvas.add_child(hud)
 	add_child(canvas)
@@ -129,6 +149,34 @@ func _setup_debug_hud() -> void:
 	hud.set("fighters", fighters)
 
 	canvas.add_child(hud)
+	add_child(canvas)
+
+
+# --- Training Mode Overlay ---
+
+func _setup_training_overlay() -> void:
+	var canvas := CanvasLayer.new()
+	canvas.name = "TrainingOverlay"
+	canvas.layer = 5
+
+	var label := Label.new()
+	label.text = "TRAINING MODE"
+	label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	label.offset_top = 20
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 28)
+	label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.4, 0.7))
+	canvas.add_child(label)
+
+	var hint := Label.new()
+	hint.text = "E + R to return to menu"
+	hint.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	hint.offset_top = 54
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hint.add_theme_font_size_override("font_size", 14)
+	hint.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6, 0.7))
+	canvas.add_child(hint)
+
 	add_child(canvas)
 
 
@@ -169,7 +217,7 @@ func _show_winner(winner: int) -> void:
 	canvas.add_child(label)
 
 	var sub := Label.new()
-	sub.text = "Returning to character select..."
+	sub.text = "Returning to main menu..."
 	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	sub.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	sub.offset_top = -80

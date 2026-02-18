@@ -6,6 +6,7 @@ var fighters: Array = []
 var damage_labels: Array[Label] = []
 var stock_containers: Array[HBoxContainer] = []
 var player_colors: Array[Color] = [Color(0.4, 0.7, 1.0), Color(1.0, 0.5, 0.4)]
+var hide_p2: bool = false
 
 
 func _ready() -> void:
@@ -29,7 +30,8 @@ func _build_hud() -> void:
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(hbox)
 
-	for i in range(2):
+	var player_count := 1 if hide_p2 else 2
+	for i in range(player_count):
 		var panel := PanelContainer.new()
 		panel.custom_minimum_size = Vector2(240, 90)
 
@@ -75,7 +77,7 @@ func _build_hud() -> void:
 		stock_containers.append(stock_box)
 
 		# Build initial stock icons
-		_rebuild_stocks(i, 3)
+		_rebuild_stocks(i, GameManager.stock_count)
 
 
 func _on_damage_changed(pid: int, new_percent: float) -> void:

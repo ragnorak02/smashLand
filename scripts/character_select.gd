@@ -1,6 +1,7 @@
 extends Control
 
 ## Character selection screen. Each player picks a fighter, then the arena loads.
+## In training mode, only P1 selects; P2 is auto-readied.
 
 const FIGHTER_NAMES := ["Brawler", "Speedster"]
 const FIGHTER_COLORS: Array[Color] = [Color(0.2, 0.4, 0.9), Color(0.9, 0.2, 0.2)]
@@ -22,6 +23,8 @@ var p2_ready_label: Label
 
 
 func _ready() -> void:
+	if GameManager.training_mode:
+		p2_ready = true
 	_build_ui()
 	_update_display()
 
@@ -33,6 +36,11 @@ func _process(delta: float) -> void:
 			GameManager.player1_character = p1_selection
 			GameManager.player2_character = p2_selection
 			GameManager.change_scene("res://scenes/Arena.tscn")
+		return
+
+	# Back to main menu (E key / LB)
+	if Input.is_action_just_pressed("p1_shield"):
+		GameManager.change_scene("res://scenes/Main.tscn")
 		return
 
 	# P1 input
@@ -50,19 +58,20 @@ func _process(delta: float) -> void:
 			p1_selection = 1 - p1_selection
 			_update_display()
 
-	# P2 input
-	if not p2_ready:
-		if Input.is_action_just_pressed("p2_move_up") or Input.is_action_just_pressed("p2_move_down"):
-			p2_selection = 1 - p2_selection
-			_update_display()
-		if Input.is_action_just_pressed("p2_select"):
-			p2_ready = true
-			_update_display()
-	else:
-		if Input.is_action_just_pressed("p2_move_up") or Input.is_action_just_pressed("p2_move_down"):
-			p2_ready = false
-			p2_selection = 1 - p2_selection
-			_update_display()
+	# P2 input (skip in training mode)
+	if not GameManager.training_mode:
+		if not p2_ready:
+			if Input.is_action_just_pressed("p2_move_up") or Input.is_action_just_pressed("p2_move_down"):
+				p2_selection = 1 - p2_selection
+				_update_display()
+			if Input.is_action_just_pressed("p2_select"):
+				p2_ready = true
+				_update_display()
+		else:
+			if Input.is_action_just_pressed("p2_move_up") or Input.is_action_just_pressed("p2_move_down"):
+				p2_ready = false
+				p2_selection = 1 - p2_selection
+				_update_display()
 
 	# Both ready — start match
 	if p1_ready and p2_ready and not transitioning:
@@ -96,6 +105,15 @@ func _build_ui() -> void:
 	title_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.3))
 	root.add_child(title_label)
 
+	# Training mode subtitle
+	if GameManager.training_mode:
+		var training_sub := Label.new()
+		training_sub.text = "TRAINING MODE"
+		training_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		training_sub.add_theme_font_size_override("font_size", 18)
+		training_sub.add_theme_color_override("font_color", Color(0.3, 0.9, 0.4))
+		root.add_child(training_sub)
+
 	# Spacer
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 8)
@@ -109,16 +127,20 @@ func _build_ui() -> void:
 
 	_build_player_column(1, columns)
 
-	# Divider
-	var divider := VSeparator.new()
-	divider.custom_minimum_size = Vector2(2, 0)
-	columns.add_child(divider)
+	if not GameManager.training_mode:
+		# Divider
+		var divider := VSeparator.new()
+		divider.custom_minimum_size = Vector2(2, 0)
+		columns.add_child(divider)
 
-	_build_player_column(2, columns)
+		_build_player_column(2, columns)
 
 	# Instructions
 	var instr := Label.new()
-	instr.text = "P1: W/S + SPACE   |   P2: Arrows + ENTER  /  Controller"
+	if GameManager.training_mode:
+		instr.text = "P1: W/S + SPACE  |  E to go back"
+	else:
+		instr.text = "P1: W/S + SPACE   |   P2: Arrows + ENTER  /  Controller   |   E to go back"
 	instr.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	instr.add_theme_font_size_override("font_size", 15)
 	instr.add_theme_color_override("font_color", Color(0.5, 0.5, 0.6))
@@ -207,9 +229,11 @@ func _build_fighter_card(index: int) -> PanelContainer:
 
 func _update_display() -> void:
 	_style_options(p1_options, p1_selection, Color(0.2, 0.3, 0.55), Color(0.4, 0.6, 1.0))
-	_style_options(p2_options, p2_selection, Color(0.5, 0.2, 0.2), Color(1.0, 0.5, 0.4))
+	if not GameManager.training_mode:
+		_style_options(p2_options, p2_selection, Color(0.5, 0.2, 0.2), Color(1.0, 0.5, 0.4))
 	p1_ready_label.text = "READY!" if p1_ready else ""
-	p2_ready_label.text = "READY!" if p2_ready else ""
+	if not GameManager.training_mode:
+		p2_ready_label.text = "READY!" if p2_ready else ""
 
 
 func _style_options(options: Array[PanelContainer], selected: int, sel_bg: Color, sel_border: Color) -> void:
