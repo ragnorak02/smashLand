@@ -761,7 +761,7 @@ func _do_pummel() -> void:
 	if not grab_target or not is_instance_valid(grab_target):
 		_release_grab()
 		return
-	var atk := attacks.get("pummel", {})
+	var atk := attacks.get("pummel", {}) as Dictionary
 	var dmg: float = atk.get("damage", 2.0)
 	grab_target.damage_percent += dmg
 	grab_target.emit_signal("damage_changed", grab_target.player_id, grab_target.damage_percent)
@@ -778,7 +778,7 @@ func _do_throw(throw_name: String) -> void:
 		_release_grab()
 		return
 
-	var atk := attacks.get(throw_name, attacks.get("throw_forward", {}))
+	var atk := attacks.get(throw_name, attacks.get("throw_forward", {})) as Dictionary
 
 	# Apply throw damage
 	var dmg: float = atk.get("damage", 8.0)
