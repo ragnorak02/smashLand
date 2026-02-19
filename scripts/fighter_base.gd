@@ -245,6 +245,11 @@ func _update_eyes() -> void:
 # --- Main Physics Loop ---
 
 func _physics_process(delta: float) -> void:
+	# Pause freeze — keep visuals but stop all logic
+	if GameManager.is_paused:
+		queue_redraw()
+		return
+
 	# Hitlag freeze — skip everything except visual shake
 	if hitlag_frames > 0:
 		hitlag_frames -= 1

@@ -22,6 +22,7 @@ func _init() -> void:
 	_test_fighter_config()
 	_test_knockback_formula()
 	_test_project_config()
+	_test_game_manager_settings()
 	_test_performance()
 
 	var duration := Time.get_ticks_msec() - start_time
@@ -102,6 +103,7 @@ func _test_script_existence() -> void:
 		"script_exists_hitbox": "res://scripts/combat/hitbox.gd",
 		"script_exists_combat_hud": "res://scripts/combat_hud.gd",
 		"script_exists_input_debug_hud": "res://scripts/input_debug_hud.gd",
+		"script_exists_pause_menu": "res://scripts/pause_menu.gd",
 	}
 	for test_name in scripts:
 		var path: String = scripts[test_name]
@@ -351,6 +353,34 @@ func _test_project_config() -> void:
 		"physics_layers_defined",
 		"All 5 physics layers named",
 		"Unnamed layers: 1=" + layer1 + " 2=" + layer2 + " 3=" + layer3 + " 4=" + layer4 + " 5=" + layer5
+	)
+
+
+# ---------------------------------------------------------------------------
+# Suite: GameManager Settings (2 tests)
+# ---------------------------------------------------------------------------
+
+func _test_game_manager_settings() -> void:
+	var gm_script := load("res://scripts/autoload/game_manager.gd") as GDScript
+	if gm_script == null:
+		_fail("game_manager_has_match_time_limit", "Could not load game_manager.gd")
+		_fail("game_manager_has_is_paused", "Could not load game_manager.gd")
+		return
+
+	var source: String = gm_script.source_code
+
+	_assert_true(
+		source.contains("match_time_limit"),
+		"game_manager_has_match_time_limit",
+		"match_time_limit property found",
+		"match_time_limit property not found in game_manager.gd"
+	)
+
+	_assert_true(
+		source.contains("is_paused"),
+		"game_manager_has_is_paused",
+		"is_paused property found",
+		"is_paused property not found in game_manager.gd"
 	)
 
 

@@ -1,6 +1,7 @@
 extends Control
 
 ## Bottom-of-screen combat HUD showing damage percentage and stock icons per player.
+## Also displays match timer top-center when time limit is active.
 
 var fighters: Array = []
 var damage_labels: Array[Label] = []
@@ -8,11 +9,22 @@ var stock_containers: Array[HBoxContainer] = []
 var player_colors: Array[Color] = [Color(0.4, 0.7, 1.0), Color(1.0, 0.5, 0.4)]
 var hide_p2: bool = false
 
+# Timer display
+var timer_label: Label
+var match_time: float = 0.0
+var show_timer: bool = false
+
 
 func _ready() -> void:
 	_build_hud()
+	_build_timer()
 	# Connect fighter signals after a frame to ensure fighters are ready
 	_connect_signals.call_deferred()
+
+
+func _process(_delta: float) -> void:
+	if show_timer and timer_label:
+		_update_timer_display()
 
 
 func _connect_signals() -> void:
@@ -78,6 +90,45 @@ func _build_hud() -> void:
 
 		# Build initial stock icons
 		_rebuild_stocks(i, GameManager.stock_count)
+
+
+func _build_timer() -> void:
+	show_timer = GameManager.match_time_limit > 0 and not GameManager.training_mode
+	if not show_timer:
+		return
+
+	timer_label = Label.new()
+	timer_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
+	timer_label.offset_top = 16
+	timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	timer_label.add_theme_font_size_override("font_size", 36)
+	timer_label.add_theme_color_override("font_color", Color.WHITE)
+	timer_label.custom_minimum_size = Vector2(120, 0)
+	add_child(timer_label)
+
+
+func set_match_time(time: float) -> void:
+	match_time = time
+
+
+func _update_timer_display() -> void:
+	var t := int(ceil(match_time))
+	if t < 0:
+		t = 0
+	var minutes := t / 60
+	var seconds := t % 60
+	timer_label.text = "%d:%02d" % [minutes, seconds]
+
+	# Color shifts: white (>60s) → yellow (≤60s) → red (≤10s)
+	var color: Color
+	if match_time > 60.0:
+		color = Color.WHITE
+	elif match_time > 10.0:
+		var ratio := (match_time - 10.0) / 50.0
+		color = Color(1.0, 0.2, 0.1).lerp(Color(1.0, 0.9, 0.2), ratio)
+	else:
+		color = Color(1.0, 0.2, 0.1)
+	timer_label.add_theme_color_override("font_color", color)
 
 
 func _on_damage_changed(pid: int, new_percent: float) -> void:

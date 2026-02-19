@@ -17,19 +17,20 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 1. `InputSetup` — `scripts/autoload/input_setup.gd` — registers all input actions at startup
 2. `GameManager` — `scripts/autoload/game_manager.gd` — stores selections, handles scene changes
 
-### Core Scripts (11 GDScript + 2 test scripts)
+### Core Scripts (12 GDScript + 2 test scripts)
 | File | Purpose |
 |------|---------|
 | `scripts/fighter_base.gd` | 11-state machine, movement, combat, shield, grab, visuals, signals |
-| `scripts/arena.gd` | Stage construction, fighter spawning, camera/HUD setup, match flow |
+| `scripts/arena.gd` | Stage construction, fighter spawning, camera/HUD setup, match flow, timer, pause |
 | `scripts/dynamic_camera.gd` | Tracks fighters, smooth zoom interpolation |
 | `scripts/character_select.gd` | Two-player fighter selection UI |
 | `scripts/combat/attack_data.gd` | Static attack dictionaries for Brawler/Speedster (`class_name AttackData`) |
 | `scripts/combat/hitbox.gd` | Dynamically spawned hitbox Area2D with attack metadata |
-| `scripts/combat_hud.gd` | Damage percentage + stock icons display (CanvasLayer) |
+| `scripts/combat_hud.gd` | Damage percentage + stock icons + match timer display (CanvasLayer) |
+| `scripts/pause_menu.gd` | Pause overlay UI — Resume / Restart / Quit navigation |
 | `scripts/input_debug_hud.gd` | Real-time input/combat state overlay |
 | `scripts/main.gd` | Entry point — immediately loads CharacterSelect |
-| `tests/run-tests.gd` | Headless test runner (32 tests, 9 suites) |
+| `tests/run-tests.gd` | Headless test runner (35 tests, 10 suites) |
 
 ### Fighter Types
 | Type | ID | Color | Size | Speed | Jumps | Notes |
@@ -39,6 +40,8 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 
 ### Conventions
 - Input actions prefixed: `p1_`, `p2_` (move_left, move_right, move_up, move_down, jump, select, attack, shield, grab)
+- Global `pause` action (ESC + Xbox Start) — toggles pause menu in arena
+- Match time limit options: 1:00, 2:00, 3:00, 4:00, 5:00 (default), 7:00, 9:00, infinite — set in Options
 - Kill zones: Y > 700, |X| > 1200
 - Platform origin at (0,0), fighters spawn at (-200,-100) and (200,-100)
 - Fighter collision bottom-aligned — feet at CharacterBody2D `position.y`
@@ -46,21 +49,21 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 - Collision layers: 1=World, 2=P1 Hurtbox, 3=P2 Hurtbox, 4=P1 Hitbox, 5=P2 Hitbox
 - Fighter states: IDLE, RUN, AIR, ATTACK, HITSTUN, SHIELD, SHIELD_STUN, SHIELD_BREAK, GRAB, GRAB_HOLD, GRABBED
 - Knockback formula: `(base_kb + (percent * kb_scaling / 10)) * (200 / (weight + 100))`
-- Stocks: 3 per fighter, match ends when one reaches 0
+- Stocks: 3 per fighter, match ends when one reaches 0 or when timer expires (most stocks → lowest damage % → draw)
 
 ## Current Repo State
 
 - **Phase 1 (Foundation)** — complete: movement, camera, character select, arena flow
 - **Phase 2 (Combat)** — complete: 7 attacks per fighter, damage/knockback, hitstun/hitlag, shield (drain/regen/break), grab (pummel + 4 throws + mash-out), combat HUD
-- **Phase 3 (Game Flow)** — partially complete: stocks (3 per fighter), win condition with winner overlay → return to character select, invulnerability on respawn. **Not started:** match timer, results screen, main menu, pause menu
-- **Test suite**: 32 headless tests across 9 suites (`tests/run-tests.gd`), CI wrappers (`run-tests.bat`, `run-tests.sh`)
+- **Phase 3 (Game Flow)** — mostly complete: stocks (3 per fighter), win condition with winner overlay → return to main menu, invulnerability on respawn, match timer (countdown with time-up win condition), pause menu (Resume/Restart/Quit), main menu + options (stock count + match time). **Not started:** results screen
+- **Test suite**: 35 headless tests across 10 suites (`tests/run-tests.gd`), CI wrappers (`run-tests.bat`, `run-tests.sh`)
 - **Studio OS integration**: `game.config.json` with launcher metadata, test command, build v0.2.1
 - No art/audio assets — all visuals are ColorRect-based programmer art + `_draw()` overlays
 - No fonts, themes, or .tres resource files
 - Only 2 fighter types exist (Brawler, Speedster) — selected via integer toggle
-- GameManager stores selections, stock count, and last winner
+- GameManager stores selections, stock count, match time limit, pause state, and last winner
 - Full attack/shield/grab triangle implemented (attack beats grab, shield beats attack, grab beats shield)
-- 4 scenes: Main.tscn, CharacterSelect.tscn, Arena.tscn, FighterBase.tscn
+- 5 scenes: Main.tscn, CharacterSelect.tscn, Arena.tscn, FighterBase.tscn, OptionsMenu.tscn
 
 ## Git Workflow
 See [git_workflow.md](git_workflow.md) for checkpoint commit process and safety rules.

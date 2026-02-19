@@ -8,6 +8,7 @@ extends Node
 func _ready() -> void:
 	_setup_player(1)
 	_setup_player(2)
+	_setup_pause()
 
 
 func _setup_player(player: int) -> void:
@@ -56,6 +57,13 @@ func _setup_player(player: int) -> void:
 		_add_joy_button(p + "move_down", JOY_BUTTON_DPAD_DOWN)
 		_add_joy_button(p + "move_left", JOY_BUTTON_DPAD_LEFT)
 		_add_joy_button(p + "move_right", JOY_BUTTON_DPAD_RIGHT)
+
+
+func _setup_pause() -> void:
+	if not InputMap.has_action("pause"):
+		InputMap.add_action("pause")
+	_add_key("pause", KEY_ESCAPE)
+	_add_joy_button("pause", JOY_BUTTON_START)
 
 
 func _add_key(action: String, keycode: Key) -> void:
