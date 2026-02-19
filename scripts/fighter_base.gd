@@ -13,7 +13,7 @@ signal fighter_died(player_id: int)
 # --- State Machine ---
 enum State {
 	IDLE, RUN, AIR, ATTACK, HITSTUN, SHIELD, SHIELD_STUN, SHIELD_BREAK,
-	GRAB, GRAB_HOLD, GRABBED
+	GRAB, GRAB_HOLD, GRABBED, CHARGE
 }
 var state: State = State.IDLE
 
@@ -77,6 +77,16 @@ var grab_max_hold: float = 1.5
 var grab_mash_count: int = 0
 var grab_mash_threshold: int = 8
 var pummel_cooldown: float = 0.0
+
+# Smash charge
+var smash_charge_timer: float = 0.0
+var smash_charge_dir: String = ""
+var smash_charge_max: float = 1.5
+var smash_charge_min_hold: float = 0.12
+var attack_hold_timer: float = 0.0
+var pending_tilt_dir: String = ""
+var is_tilt_pending: bool = false
+var _smash_charge_multiplier: float = 1.0
 
 # Invulnerability
 var invulnerable: bool = false
@@ -323,6 +333,8 @@ func _physics_process(delta: float) -> void:
 			_state_grab_hold(delta)
 		State.GRABBED:
 			_state_grabbed(delta)
+		State.CHARGE:
+			_state_charge(delta, on_floor)
 
 	move_and_slide()
 
@@ -346,6 +358,13 @@ func _physics_process(delta: float) -> void:
 	# Kill zone (skip during spawn grace period)
 	if _spawn_grace_frames <= 0 and (position.y > KILL_ZONE_Y or absf(position.x) > KILL_ZONE_X):
 		_die()
+
+	# Charge body flash — lerp toward white with increasing pulse speed
+	if state == State.CHARGE and body_rect:
+		var charge_ratio := clampf(smash_charge_timer / smash_charge_max, 0.0, 1.0)
+		var pulse_speed := 4.0 + charge_ratio * 12.0
+		var pulse := 0.5 + 0.5 * sin(smash_charge_timer * pulse_speed)
+		body_rect.color = body_color.lerp(Color.WHITE, charge_ratio * 0.6 * pulse)
 
 	# Invulnerability blink
 	if invulnerable:
@@ -537,11 +556,40 @@ func _state_grabbed(_delta: float) -> void:
 	if Input.is_action_just_pressed(input_prefix + "attack") or \
 	   Input.is_action_just_pressed(input_prefix + "jump") or \
 	   Input.is_action_just_pressed(input_prefix + "shield") or \
-	   Input.is_action_just_pressed(input_prefix + "grab"):
+	   Input.is_action_just_pressed(input_prefix + "grab") or \
+	   Input.is_action_just_pressed(input_prefix + "special"):
 		if grabbed_by and is_instance_valid(grabbed_by):
 			grabbed_by.grab_mash_count += 1
 			if grabbed_by.grab_mash_count >= grabbed_by.grab_mash_threshold:
 				grabbed_by._release_grab()
+
+
+func _state_charge(delta: float, on_floor: bool) -> void:
+	# Friction — can't move while charging
+	velocity.x = move_toward(velocity.x, 0.0, ground_friction * 1.5 * delta)
+
+	# Fall off platform → cancel to AIR
+	if not on_floor:
+		smash_charge_timer = 0.0
+		smash_charge_dir = ""
+		if body_rect:
+			body_rect.color = body_color
+		state = State.AIR
+		return
+
+	smash_charge_timer += delta
+
+	# Auto-release at max charge
+	if smash_charge_timer >= smash_charge_max or \
+	   not Input.is_action_pressed(input_prefix + "attack"):
+		var charge_ratio := clampf(smash_charge_timer / smash_charge_max, 0.0, 1.0)
+		var charge_mult := 1.0 + (charge_ratio * 0.5)  # 1.0x to 1.5x
+		smash_charge_timer = 0.0
+		var smash_name := smash_charge_dir
+		smash_charge_dir = ""
+		if body_rect:
+			body_rect.color = body_color
+		_execute_smash(smash_name, charge_mult)
 
 
 # --- Movement Helpers ---
@@ -590,17 +638,59 @@ func _check_fast_fall(on_floor: bool) -> void:
 
 
 func _check_combat_inputs(on_floor: bool) -> void:
+	# Tilt/smash pending decision (each frame while held)
+	if is_tilt_pending and on_floor:
+		attack_hold_timer += get_physics_process_delta_time()
+		if not Input.is_action_pressed(input_prefix + "attack"):
+			# Released before threshold → execute tilt
+			is_tilt_pending = false
+			var tilt_name := pending_tilt_dir
+			pending_tilt_dir = ""
+			attack_hold_timer = 0.0
+			_start_attack(tilt_name)
+			return
+		elif attack_hold_timer >= smash_charge_min_hold:
+			# Held past threshold → start smash charge
+			is_tilt_pending = false
+			var smash_name := _tilt_to_smash(pending_tilt_dir)
+			pending_tilt_dir = ""
+			attack_hold_timer = 0.0
+			_start_smash_charge(smash_name)
+			return
+		return  # Still deciding — skip other inputs
+
 	# Shield (ground only)
 	if on_floor and Input.is_action_pressed(input_prefix + "shield"):
 		if shield_health > 0.0:
 			state = State.SHIELD
 			return
 
+	# Special (just pressed — works grounded and airborne)
+	if Input.is_action_just_pressed(input_prefix + "special"):
+		var special_name := _determine_special()
+		_start_attack(special_name)
+		return
+
 	# Attack
 	if Input.is_action_just_pressed(input_prefix + "attack"):
-		var attack_name := _determine_attack(on_floor)
-		_start_attack(attack_name)
-		return
+		if on_floor:
+			var dir := Input.get_axis(input_prefix + "move_left", input_prefix + "move_right")
+			var vert := Input.get_axis(input_prefix + "move_up", input_prefix + "move_down")
+			if absf(dir) > 0.3 or absf(vert) > 0.3:
+				# Direction held — start tilt/smash decision
+				pending_tilt_dir = _get_ground_direction_name(dir, vert)
+				is_tilt_pending = true
+				attack_hold_timer = 0.0
+				return
+			else:
+				# No direction → immediate neutral jab
+				_start_attack("ground_neutral")
+				return
+		else:
+			# Air attacks
+			var air_name := _determine_air_attack()
+			_start_attack(air_name)
+			return
 
 	# Grab (ground only)
 	if on_floor and Input.is_action_just_pressed(input_prefix + "grab"):
@@ -610,26 +700,66 @@ func _check_combat_inputs(on_floor: bool) -> void:
 
 # --- Attack System ---
 
-func _determine_attack(on_floor: bool) -> String:
+func _get_ground_direction_name(dir: float, vert: float) -> String:
+	if absf(vert) >= absf(dir):
+		if vert < -0.3:
+			return "ground_up"
+		elif vert > 0.3:
+			return "ground_down"
+	if absf(dir) > 0.3:
+		return "ground_forward"
+	return "ground_neutral"
+
+
+func _determine_air_attack() -> String:
 	var dir := Input.get_axis(input_prefix + "move_left", input_prefix + "move_right")
 	var vert := Input.get_axis(input_prefix + "move_up", input_prefix + "move_down")
+	if vert < -0.3:
+		return "air_up"
+	if vert > 0.3:
+		return "air_down"
+	if absf(dir) > 0.3:
+		if (dir > 0.0) == facing_right:
+			return "air_forward"
+		else:
+			return "air_back"
+	return "air_neutral"
 
-	if on_floor:
-		if absf(dir) > 0.3:
-			return "ground_forward"
-		return "ground_neutral"
-	else:
-		# Air attacks — check direction
+
+func _determine_special() -> String:
+	var dir := Input.get_axis(input_prefix + "move_left", input_prefix + "move_right")
+	var vert := Input.get_axis(input_prefix + "move_up", input_prefix + "move_down")
+	if absf(vert) >= absf(dir):
 		if vert < -0.3:
-			return "air_up"
-		if vert > 0.3:
-			return "air_down"
-		if absf(dir) > 0.3:
-			if (dir > 0.0) == facing_right:
-				return "air_forward"
-			else:
-				return "air_back"
-		return "air_neutral"
+			return "special_up"
+		elif vert > 0.3:
+			return "special_down"
+	if absf(dir) > 0.3:
+		return "special_forward"
+	return "special_neutral"
+
+
+func _tilt_to_smash(tilt_name: String) -> String:
+	match tilt_name:
+		"ground_forward":
+			return "smash_forward"
+		"ground_up":
+			return "smash_up"
+		"ground_down":
+			return "smash_down"
+		_:
+			return "smash_forward"
+
+
+func _start_smash_charge(smash_name: String) -> void:
+	smash_charge_dir = smash_name
+	smash_charge_timer = 0.0
+	state = State.CHARGE
+
+
+func _execute_smash(smash_name: String, multiplier: float) -> void:
+	_smash_charge_multiplier = multiplier
+	_start_attack(smash_name)
 
 
 func _start_attack(attack_name: String) -> void:
@@ -644,10 +774,17 @@ func _start_attack(attack_name: String) -> void:
 func _spawn_hitbox(atk: Dictionary) -> void:
 	_despawn_hitbox()
 
+	# Apply smash charge multiplier to a copy of the attack data
+	var effective_atk := atk.duplicate()
+	if _smash_charge_multiplier > 1.0:
+		effective_atk["damage"] = effective_atk.get("damage", 0.0) * _smash_charge_multiplier
+		effective_atk["base_kb"] = effective_atk.get("base_kb", 0.0) * _smash_charge_multiplier
+	_smash_charge_multiplier = 1.0
+
 	var hb := Area2D.new()
 	var hb_script := load("res://scripts/combat/hitbox.gd")
 	hb.set_script(hb_script)
-	hb.set("attack_data", atk)
+	hb.set("attack_data", effective_atk)
 	hb.set("attacker", self)
 
 	# P1 hitbox on layer 4 (masks P2 hurtbox layer 3)
@@ -755,6 +892,11 @@ func get_grabbed(grabber: CharacterBody2D) -> void:
 	state = State.GRABBED
 	_despawn_hitbox()
 	velocity = Vector2.ZERO
+	is_tilt_pending = false
+	pending_tilt_dir = ""
+	smash_charge_timer = 0.0
+	smash_charge_dir = ""
+	_smash_charge_multiplier = 1.0
 
 
 func _do_pummel() -> void:
@@ -833,6 +975,13 @@ func take_hit(atk: Dictionary, attacker: CharacterBody2D) -> void:
 	if invulnerable:
 		return
 
+	# Reset charge state
+	is_tilt_pending = false
+	pending_tilt_dir = ""
+	smash_charge_timer = 0.0
+	smash_charge_dir = ""
+	_smash_charge_multiplier = 1.0
+
 	# Shield check
 	if state == State.SHIELD or state == State.SHIELD_STUN:
 		_shield_hit(atk, attacker)
@@ -897,6 +1046,11 @@ func _shield_hit(atk: Dictionary, attacker: CharacterBody2D) -> void:
 
 func _die() -> void:
 	print("[Fighter P%d] _die() at pos=%s frame=%d" % [player_id, position, _debug_frame_count])
+	is_tilt_pending = false
+	pending_tilt_dir = ""
+	smash_charge_timer = 0.0
+	smash_charge_dir = ""
+	_smash_charge_multiplier = 1.0
 	if GameManager.training_mode:
 		_respawn()
 		return
@@ -928,6 +1082,11 @@ func _respawn() -> void:
 	state = State.IDLE
 	_despawn_hitbox()
 	_spawn_grace_frames = 5
+	is_tilt_pending = false
+	pending_tilt_dir = ""
+	smash_charge_timer = 0.0
+	smash_charge_dir = ""
+	_smash_charge_multiplier = 1.0
 
 	# Invulnerability
 	invulnerable = true
@@ -989,6 +1148,22 @@ func _draw() -> void:
 		var trail_color := Color(1.0, 0.6, 0.2, alpha * 0.5)
 		var trail_dir := -velocity.normalized() * 20.0
 		draw_line(Vector2(0, -body_h / 2.0), Vector2(0, -body_h / 2.0) + trail_dir, trail_color, 3.0)
+
+	# Smash charge glow
+	if state == State.CHARGE:
+		var charge_ratio := clampf(smash_charge_timer / smash_charge_max, 0.0, 1.0)
+		var glow_radius := 20.0 + charge_ratio * 30.0
+		var glow_alpha := 0.15 + charge_ratio * 0.35
+		var glow_color := Color(0.94, 0.78, 0.31, glow_alpha)
+		draw_circle(Vector2(0, -body_h / 2.0), glow_radius, glow_color)
+		# Spark particles at >80% charge
+		if charge_ratio > 0.8:
+			var spark_time := smash_charge_timer * 10.0
+			for i in range(4):
+				var spark_angle := spark_time + i * TAU / 4.0
+				var spark_dist := glow_radius * 0.8
+				var spark_pos := Vector2(cos(spark_angle) * spark_dist, -body_h / 2.0 + sin(spark_angle) * spark_dist)
+				draw_circle(spark_pos, 3.0, Color(1.0, 0.95, 0.5, 0.8))
 
 	# Reset transform
 	draw_set_transform(Vector2.ZERO)

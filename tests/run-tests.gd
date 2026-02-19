@@ -24,6 +24,7 @@ func _init() -> void:
 	_test_project_config()
 	_test_game_manager_settings()
 	_test_performance()
+	_test_special_input_action()
 
 	var duration := Time.get_ticks_msec() - start_time
 	var total := _passed + _failed
@@ -190,8 +191,10 @@ func _test_attack_data_speedster() -> void:
 
 func _validate_attack_dict(attacks: Dictionary, prefix: String) -> void:
 	var expected_keys := [
-		"ground_neutral", "ground_forward",
+		"ground_neutral", "ground_forward", "ground_up", "ground_down",
 		"air_neutral", "air_forward", "air_back", "air_up", "air_down",
+		"smash_forward", "smash_up", "smash_down",
+		"special_neutral", "special_forward", "special_up", "special_down",
 		"grab", "pummel",
 		"throw_forward", "throw_back", "throw_up", "throw_down",
 	]
@@ -404,4 +407,22 @@ func _test_performance() -> void:
 		"fighter_instantiation_performance",
 		"Instantiated in " + str(elapsed) + "ms (limit 1000ms)",
 		"Took " + str(elapsed) + "ms (limit 1000ms)"
+	)
+
+
+# ---------------------------------------------------------------------------
+# Suite: Special Input Action (1 test)
+# ---------------------------------------------------------------------------
+
+func _test_special_input_action() -> void:
+	var script := load("res://scripts/autoload/input_setup.gd") as GDScript
+	if script == null:
+		_fail("special_input_action_exists", "Could not load input_setup.gd")
+		return
+	var source: String = script.source_code
+	_assert_true(
+		source.contains("\"special\""),
+		"special_input_action_exists",
+		"input_setup.gd registers 'special' action",
+		"'special' action not found in input_setup.gd source"
 	)

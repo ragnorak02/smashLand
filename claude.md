@@ -20,17 +20,17 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 ### Core Scripts (12 GDScript + 2 test scripts)
 | File | Purpose |
 |------|---------|
-| `scripts/fighter_base.gd` | 11-state machine, movement, combat, shield, grab, visuals, signals |
+| `scripts/fighter_base.gd` | 12-state machine, movement, combat (tilts/smash/specials), shield, grab, visuals, signals |
 | `scripts/arena.gd` | Stage construction, fighter spawning, camera/HUD setup, match flow, timer, pause |
 | `scripts/dynamic_camera.gd` | Tracks fighters, smooth zoom interpolation |
 | `scripts/character_select.gd` | Two-player fighter selection UI |
 | `scripts/combat/attack_data.gd` | Static attack dictionaries for Brawler/Speedster (`class_name AttackData`) |
 | `scripts/combat/hitbox.gd` | Dynamically spawned hitbox Area2D with attack metadata |
-| `scripts/combat_hud.gd` | Damage percentage + stock icons + match timer display (CanvasLayer) |
+| `scripts/combat_hud.gd` | Damage percentage + stock icons + match timer + controls letterbox (CanvasLayer) |
 | `scripts/pause_menu.gd` | Pause overlay UI — Resume / Restart / Quit navigation |
 | `scripts/input_debug_hud.gd` | Real-time input/combat state overlay |
 | `scripts/main.gd` | Entry point — immediately loads CharacterSelect |
-| `tests/run-tests.gd` | Headless test runner (35 tests, 10 suites) |
+| `tests/run-tests.gd` | Headless test runner (36 tests, 11 suites) |
 
 ### Fighter Types
 | Type | ID | Color | Size | Speed | Jumps | Notes |
@@ -39,25 +39,25 @@ Main.tscn → CharacterSelect.tscn → Arena.tscn
 | Speedster | 1 | Red (0.9, 0.2, 0.2) | 36x60 | 500 | 4 | Faster, more air jumps |
 
 ### Conventions
-- Input actions prefixed: `p1_`, `p2_` (move_left, move_right, move_up, move_down, jump, select, attack, shield, grab)
+- Input actions prefixed: `p1_`, `p2_` (move_left, move_right, move_up, move_down, jump, select, attack, shield, grab, special)
 - Global `pause` action (ESC + Xbox Start) — toggles pause menu in arena
 - Match time limit options: 1:00, 2:00, 3:00, 4:00, 5:00 (default), 7:00, 9:00, infinite — set in Options
 - Kill zones: Y > 700, |X| > 1200
 - Platform origin at (0,0), fighters spawn at (-200,-100) and (200,-100)
 - Fighter collision bottom-aligned — feet at CharacterBody2D `position.y`
-- P1: WASD + Space + Q/E/R (attack/shield/grab) | P2: Arrows + Enter + RShift/RCtrl/KP0 + Xbox controller
+- P1: WASD + Space + Q/E/R/F (attack/shield/grab/special) | P2: Arrows + Enter + RShift/RCtrl/KP0/KP1 + Xbox controller
 - Collision layers: 1=World, 2=P1 Hurtbox, 3=P2 Hurtbox, 4=P1 Hitbox, 5=P2 Hitbox
-- Fighter states: IDLE, RUN, AIR, ATTACK, HITSTUN, SHIELD, SHIELD_STUN, SHIELD_BREAK, GRAB, GRAB_HOLD, GRABBED
+- Fighter states: IDLE, RUN, AIR, ATTACK, HITSTUN, SHIELD, SHIELD_STUN, SHIELD_BREAK, GRAB, GRAB_HOLD, GRABBED, CHARGE
 - Knockback formula: `(base_kb + (percent * kb_scaling / 10)) * (200 / (weight + 100))`
 - Stocks: 3 per fighter, match ends when one reaches 0 or when timer expires (most stocks → lowest damage % → draw)
 
 ## Current Repo State
 
 - **Phase 1 (Foundation)** — complete: movement, camera, character select, arena flow
-- **Phase 2 (Combat)** — complete: 7 attacks per fighter, damage/knockback, hitstun/hitlag, shield (drain/regen/break), grab (pummel + 4 throws + mash-out), combat HUD
+- **Phase 2 (Combat)** — complete: 22 attacks per fighter (4 ground tilts, 3 smash attacks, 4 specials, 5 aerials, grab/pummel/4 throws), tilt vs smash charge system (tap=tilt, hold=charge 1.0-1.5x), damage/knockback, hitstun/hitlag, shield (drain/regen/break), grab (pummel + 4 throws + mash-out), combat HUD with controls letterbox
 - **Phase 3 (Game Flow)** — mostly complete: stocks (3 per fighter), win condition with winner overlay → return to main menu, invulnerability on respawn, match timer (countdown with time-up win condition), pause menu (Resume/Restart/Quit), main menu + options (stock count + match time). **Not started:** results screen
-- **Test suite**: 35 headless tests across 10 suites (`tests/run-tests.gd`), CI wrappers (`run-tests.bat`, `run-tests.sh`)
-- **Studio OS integration**: `game.config.json` with launcher metadata, test command, build v0.2.1
+- **Test suite**: 36 headless tests across 11 suites (`tests/run-tests.gd`), CI wrappers (`run-tests.bat`, `run-tests.sh`)
+- **Studio OS integration**: `game.config.json` with launcher metadata, test command, build v0.3.0
 - No art/audio assets — all visuals are ColorRect-based programmer art + `_draw()` overlays
 - No fonts, themes, or .tres resource files
 - Only 2 fighter types exist (Brawler, Speedster) — selected via integer toggle

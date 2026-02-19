@@ -18,6 +18,7 @@ var show_timer: bool = false
 func _ready() -> void:
 	_build_hud()
 	_build_timer()
+	_build_controls_display()
 	# Connect fighter signals after a frame to ensure fighters are ready
 	_connect_signals.call_deferred()
 
@@ -37,7 +38,7 @@ func _connect_signals() -> void:
 func _build_hud() -> void:
 	var hbox := HBoxContainer.new()
 	hbox.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	hbox.offset_top = -100
+	hbox.offset_top = -130
 	hbox.set("theme_override_constants/separation", 40)
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(hbox)
@@ -165,3 +166,62 @@ func _rebuild_stocks(player_idx: int, count: int) -> void:
 		icon.custom_minimum_size = Vector2(14, 14)
 		icon.color = player_colors[player_idx]
 		container.add_child(icon)
+
+
+func _build_controls_display() -> void:
+	var panel := PanelContainer.new()
+	panel.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
+	panel.offset_top = -30
+	panel.custom_minimum_size = Vector2(0, 30)
+
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.04, 0.05, 0.08, 0.75)
+	sb.set_content_margin_all(4)
+	panel.add_theme_stylebox_override("panel", sb)
+	add_child(panel)
+
+	var hbox := HBoxContainer.new()
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.set("theme_override_constants/separation", 18)
+	panel.add_child(hbox)
+
+	_add_control_entry(hbox, "LS", "Move")
+	_add_control_entry(hbox, "A", "Jump")
+	_add_control_entry(hbox, "X", "Attack")
+	_add_control_entry(hbox, "B", "Special")
+	_add_control_entry(hbox, "Y", "Grab")
+	_add_control_entry(hbox, "LB", "Shield")
+	_add_control_entry(hbox, "Start", "Pause")
+
+
+func _add_control_entry(parent: HBoxContainer, button_text: String, action_text: String) -> void:
+	var entry := HBoxContainer.new()
+	entry.set("theme_override_constants/separation", 4)
+	parent.add_child(entry)
+
+	# Gold pill badge
+	var badge := PanelContainer.new()
+	var badge_sb := StyleBoxFlat.new()
+	badge_sb.bg_color = Color(0.94, 0.78, 0.31)
+	badge_sb.corner_radius_top_left = 4
+	badge_sb.corner_radius_top_right = 4
+	badge_sb.corner_radius_bottom_left = 4
+	badge_sb.corner_radius_bottom_right = 4
+	badge_sb.set_content_margin_all(2)
+	badge_sb.content_margin_left = 5
+	badge_sb.content_margin_right = 5
+	badge.add_theme_stylebox_override("panel", badge_sb)
+	entry.add_child(badge)
+
+	var btn_label := Label.new()
+	btn_label.text = button_text
+	btn_label.add_theme_font_size_override("font_size", 11)
+	btn_label.add_theme_color_override("font_color", Color(0.1, 0.08, 0.05))
+	badge.add_child(btn_label)
+
+	# Action text
+	var act_label := Label.new()
+	act_label.text = action_text
+	act_label.add_theme_font_size_override("font_size", 12)
+	act_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	entry.add_child(act_label)
